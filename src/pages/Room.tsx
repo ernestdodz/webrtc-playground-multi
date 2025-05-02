@@ -140,7 +140,10 @@ const Room: React.FC = () => {
 
           // Add event listener for when user stops sharing screen via browser UI
           stream.getVideoTracks()[0].onended = () => {
-            setIsScreenSharing(false);
+            // Call shareScreen(false) to properly revert to camera
+            shareScreen(false).then(() => {
+              setIsScreenSharing(false);
+            });
           };
         }
       }
@@ -413,7 +416,7 @@ const Room: React.FC = () => {
             onClick={handleToggleScreenShare}
             className={`p-3 rounded-full ${
               isScreenSharing
-                ? "bg-blue-600 hover:bg-blue-700"
+                ? "bg-red-500 hover:bg-red-600"
                 : "bg-gray-700 hover:bg-gray-600"
             } transition-colors duration-300`}
             aria-label={
