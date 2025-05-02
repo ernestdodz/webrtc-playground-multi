@@ -559,6 +559,175 @@ export const useWebRTC = ({
     }
   };
 
+  // Share screen
+  const shareScreen = async (isSharing: boolean) => {
+    if (!peerRef.current) return null;
+
+    try {
+      // If we're turning off screen sharing, revert to camera
+      if (!isSharing) {
+        // Get the current connections to update
+        const currentConnections = { ...connectionsRef.current };
+
+        // Get a new camera stream
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+
+        // Replace the local stream
+        setLocalStream(newStream);
+
+        // Update all connections with the new stream
+        Object.entries(currentConnections).forEach(([peerId, connections]) => {
+          if (connections.mediaConnection) {
+            // Close the old connection
+            connections.mediaConnection.close();
+
+            // Create a new call with the camera stream
+            const newCall = peerRef.current!.call(peerId, newStream);
+
+            // Update the connection
+            connectionsRef.current[peerId] = {
+              ...connectionsRef.current[peerId],
+              mediaConnection: newCall,
+            };
+
+            // Handle the stream
+            newCall.on("stream", (remoteStream) => {
+              console.log(
+                "Received stream from peer after screen share end:",
+                peerId
+              );
+            });
+
+            newCall.on("close", () => {
+              handlePeerDisconnection(peerId);
+            });
+
+            newCall.on("error", (err) => {
+              console.error(
+                "Call error with peer after screen share end:",
+                peerId,
+                err
+              );
+            });
+          }
+        });
+
+        return newStream;
+      } else {
+        // Get screen sharing stream
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true,
+        });
+
+        // Get the current connections to update
+        const currentConnections = { ...connectionsRef.current };
+
+        // Replace the local stream
+        setLocalStream(screenStream);
+
+        // Update all connections with the screen sharing stream
+        Object.entries(currentConnections).forEach(([peerId, connections]) => {
+          if (connections.mediaConnection) {
+            // Close the old connection
+            connections.mediaConnection.close();
+
+            // Create a new call with the screen stream
+            const newCall = peerRef.current!.call(peerId, screenStream);
+
+            // Update the connection
+            connectionsRef.current[peerId] = {
+              ...connectionsRef.current[peerId],
+              mediaConnection: newCall,
+            };
+
+            // Handle the stream
+            newCall.on("stream", (remoteStream) => {
+              console.log(
+                "Received stream from peer after screen share start:",
+                peerId
+              );
+            });
+
+            newCall.on("close", () => {
+              handlePeerDisconnection(peerId);
+            });
+
+            newCall.on("error", (err) => {
+              console.error(
+                "Call error with peer after screen share start:",
+                peerId,
+                err
+              );
+            });
+          }
+        });
+
+        // Add event listener for when user stops sharing screen
+        screenStream.getVideoTracks()[0].onended = async () => {
+          // Get a new camera stream
+          const newStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true,
+          });
+
+          // Replace the local stream
+          setLocalStream(newStream);
+
+          // Update all connections with the new stream
+          Object.entries(connectionsRef.current).forEach(
+            ([peerId, connections]) => {
+              if (connections.mediaConnection) {
+                // Close the old connection
+                connections.mediaConnection.close();
+
+                // Create a new call with the camera stream
+                const newCall = peerRef.current!.call(peerId, newStream);
+
+                // Update the connection
+                connectionsRef.current[peerId] = {
+                  ...connectionsRef.current[peerId],
+                  mediaConnection: newCall,
+                };
+
+                // Handle the stream
+                newCall.on("stream", (remoteStream) => {
+                  console.log(
+                    "Received stream from peer after screen share auto-end:",
+                    peerId
+                  );
+                });
+
+                newCall.on("close", () => {
+                  handlePeerDisconnection(peerId);
+                });
+
+                newCall.on("error", (err) => {
+                  console.error(
+                    "Call error with peer after screen share auto-end:",
+                    peerId,
+                    err
+                  );
+                });
+              }
+            }
+          );
+
+          return newStream;
+        };
+
+        return screenStream;
+      }
+    } catch (err) {
+      console.error("Error sharing screen:", err);
+      setError("Failed to share screen. Please check permissions.");
+      return null;
+    }
+  };
+
   // Switch between mesh and star network topologies
   const setTopology = (topology: "mesh" | "star") => {
     setNetworkTopology(topology);
@@ -634,6 +803,7 @@ export const useWebRTC = ({
     participants,
     toggleAudio,
     toggleVideo,
+    shareScreen,
     error,
     isConnected,
     setTopology,
