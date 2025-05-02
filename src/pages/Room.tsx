@@ -15,10 +15,6 @@ import {
   Link,
   MessageSquare,
   X,
-  ChevronLeft,
-  ChevronRight,
-  Settings,
-  Shield,
 } from "lucide-react";
 import { useWebRTC } from "../hooks/useWebRTC";
 
@@ -186,33 +182,37 @@ const Room: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-gray-900">
       {/* Redesigned header with consistent alignment across all screens */}
       <header className="bg-gray-800 p-4 shadow-lg border-b border-gray-700">
-        <div className="max-w-7xl flex flex-col sm:flex-row justify-between px-4">
-          <div className="flex items-center mb-3 sm:mb-0">
+        <div className="px-4 flex justify-between items-center">
+          {/* Logo section - aligned left */}
+          <div className="flex items-center">
             <div className="bg-blue-600 p-2 rounded-lg mr-2">
               <Video className="h-5 w-5 text-white" />
             </div>
             <h1 className="text-xl font-bold text-white">WebRTC Conference</h1>
           </div>
 
-          <div className="flex  space-x-3">
-            <div className="flex items-center bg-gray-900 rounded-lg px-3 py-2 border border-gray-700">
-              <Users className="h-4 w-4 text-blue-400 mr-2" />
+          {/* Controls section - aligned right */}
+          <div className="flex items-center space-x-2">
+            {/* Participant counter */}
+            <div className="flex items-center bg-gray-900 rounded-lg px-2 py-1.5 border border-gray-700">
+              <Users className="h-4 w-4 text-blue-400 mr-1.5" />
               <span className="text-sm font-medium">
-                {participants.length + 1} participants
+                {participants.length + 1}
               </span>
             </div>
 
+            {/* Share button with dropdown */}
             <div className="relative">
               <button
                 onClick={() => setShowShareOptions(!showShareOptions)}
-                className="flex items-center bg-blue-600 hover:bg-blue-700 rounded-lg px-3 py-2 transition-all duration-300"
+                className="flex items-center bg-blue-600 hover:bg-blue-700 rounded-lg px-2.5 py-1.5 transition-all duration-300"
               >
-                <Share2 className="h-4 w-4 mr-2" />
+                <Share2 className="h-4 w-4 mr-1.5" />
                 <span className="text-sm font-medium">Share</span>
               </button>
 
               {showShareOptions && (
-                <div className="absolute top-full right-0 mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 p-2 z-10 w-64 animate-fadeIn">
+                <div className="absolute top-full right-0 mt-1 bg-gray-800 rounded-lg shadow-xl border border-gray-700 p-2 z-10 w-64 animate-fadeIn">
                   <div className="p-2 border-b border-gray-700">
                     <h3 className="text-sm font-medium text-gray-300">
                       Share this room
@@ -273,9 +273,10 @@ const Room: React.FC = () => {
               )}
             </div>
 
+            {/* Chat toggle button - mobile only */}
             <button
               onClick={() => setIsChatOpen(!isChatOpen)}
-              className={`p-2 rounded-lg ${
+              className={`p-1.5 rounded-lg ${
                 isChatOpen ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"
               } sm:hidden`}
             >
