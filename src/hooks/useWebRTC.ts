@@ -75,6 +75,36 @@ export const useWebRTC = ({ roomId, isCreator }: UseWebRTCProps) => {
       debug: 2,
     });
 
+    // Handle browser tab close/refresh
+    const handleBeforeUnload = () => {
+      // Notify peers about disconnection
+      Object.entries(connectionsRef.current).forEach(
+        ([peerId, connections]) => {
+          if (connections.dataConnection?.open) {
+            connections.dataConnection.send({
+              type: "peer-disconnect",
+              peerId: peer.id,
+              timestamp: Date.now(),
+            });
+          }
+        }
+      );
+
+      // Clean up connections
+      Object.values(connectionsRef.current).forEach(
+        ({ mediaConnection, dataConnection }) => {
+          mediaConnection?.close();
+          dataConnection?.close();
+        }
+      );
+
+      // Close peer connection
+      peer.destroy();
+    };
+
+    // Add beforeunload event listener
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     peer.on("open", (id) => {
       console.log("My peer ID is:", id);
       peerRef.current = peer;
@@ -165,6 +195,22 @@ export const useWebRTC = ({ roomId, isCreator }: UseWebRTCProps) => {
 
     // Clean up connections when component unmounts
     return () => {
+      // Remove beforeunload event listener
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+
+      // Notify peers about disconnection
+      Object.entries(connectionsRef.current).forEach(
+        ([peerId, connections]) => {
+          if (connections.dataConnection?.open) {
+            connections.dataConnection.send({
+              type: "peer-disconnect",
+              peerId: peer.id,
+              timestamp: Date.now(),
+            });
+          }
+        }
+      );
+
       // Close all connections
       Object.values(connectionsRef.current).forEach(
         ({ mediaConnection, dataConnection }) => {
@@ -331,6 +377,11 @@ export const useWebRTC = ({ roomId, isCreator }: UseWebRTCProps) => {
           peers: currentPeers,
           timestamp: Date.now(),
         });
+      }
+
+      // Handle peer disconnect notification
+      if (data.type === "peer-disconnect" && data.peerId) {
+        handlePeerDisconnection(data.peerId);
       }
     });
 

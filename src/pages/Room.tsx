@@ -101,54 +101,108 @@ const Room: React.FC = () => {
 
       {/* Video grid */}
       <main className="flex-1 p-4 sm:p-6 overflow-hidden bg-gray-900">
-        <div className="h-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
-          {/* Local video (always first) */}
-          <div className="relative bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-            <video
-              ref={localVideoRef}
-              autoPlay
-              playsInline
-              muted
-              className={`w-full h-full object-cover ${
-                !isVideoOn ? "hidden" : ""
-              }`}
-            />
+        <div className="h-full grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-fr">
+          {/* If user is creator, show them first */}
+          {isCreator && (
+            <div className="relative bg-gray-800 rounded-lg overflow-hidden shadow-lg md:col-span-2 md:row-span-2 transition-all duration-300">
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className={`w-full h-full object-cover ${
+                  !isVideoOn ? "hidden" : ""
+                }`}
+              />
 
-            {!isVideoOn && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                <div className="h-20 w-20 rounded-full bg-gray-700 flex items-center justify-center">
-                  <Users className="h-10 w-10 text-gray-500" />
+              {!isVideoOn && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                  <div className="h-20 w-20 rounded-full bg-gray-700 flex items-center justify-center">
+                    <Users className="h-10 w-10 text-gray-500" />
+                  </div>
+                </div>
+              )}
+
+              <div className="absolute bottom-3 left-3 bg-gray-900 bg-opacity-70 rounded-md px-2 py-1">
+                <span className="text-sm font-medium">You (Host)</span>
+              </div>
+
+              {!isMicOn && (
+                <div className="absolute top-3 right-3 bg-red-500 rounded-full p-1">
+                  <MicOff className="h-4 w-4" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* If user is not creator, show creator first if available */}
+          {!isCreator &&
+            participants
+              .filter((p) => p.isCreator)
+              .map((participant) => (
+                <div
+                  key={participant.id}
+                  className="relative bg-gray-800 rounded-lg overflow-hidden shadow-lg md:col-span-2 md:row-span-2 animate-fadeIn transition-all duration-300"
+                >
+                  <RemoteVideo participant={participant} />
+                  <div className="absolute bottom-3 left-3 bg-gray-900 bg-opacity-70 rounded-md px-2 py-1">
+                    <span className="text-sm font-medium">Host</span>
+                  </div>
+                </div>
+              ))}
+
+          {/* If user is not creator, show them second */}
+          {!isCreator && (
+            <div className="relative bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-all duration-300">
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className={`w-full h-full object-cover ${
+                  !isVideoOn ? "hidden" : ""
+                }`}
+              />
+
+              {!isVideoOn && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                  <div className="h-20 w-20 rounded-full bg-gray-700 flex items-center justify-center">
+                    <Users className="h-10 w-10 text-gray-500" />
+                  </div>
+                </div>
+              )}
+
+              <div className="absolute bottom-3 left-3 bg-gray-900 bg-opacity-70 rounded-md px-2 py-1">
+                <span className="text-sm font-medium">You</span>
+              </div>
+
+              {!isMicOn && (
+                <div className="absolute top-3 right-3 bg-red-500 rounded-full p-1">
+                  <MicOff className="h-4 w-4" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Show all other participants */}
+          {participants
+            .filter((participant) => !participant.isCreator)
+            .map((participant) => (
+              <div
+                key={participant.id}
+                className="relative bg-gray-800 rounded-lg overflow-hidden shadow-lg animate-fadeIn transition-all duration-300"
+              >
+                <RemoteVideo participant={participant} />
+                <div className="absolute bottom-3 left-3 bg-gray-900 bg-opacity-70 rounded-md px-2 py-1">
+                  <span className="text-sm font-medium">Participant</span>
                 </div>
               </div>
-            )}
+            ))}
 
-            <div className="absolute bottom-3 left-3 bg-gray-900 bg-opacity-70 rounded-md px-2 py-1">
-              <span className="text-sm font-medium">
-                You {isCreator ? "(Host)" : ""}
-              </span>
-            </div>
-
-            {!isMicOn && (
-              <div className="absolute top-3 right-3 bg-red-500 rounded-full p-1">
-                <MicOff className="h-4 w-4" />
-              </div>
-            )}
-          </div>
-
-          {/* Remote participants */}
-          {participants.map((participant) => (
-            <div
-              key={participant.id}
-              className="relative bg-gray-800 rounded-lg overflow-hidden shadow-lg"
-            >
-              <RemoteVideo participant={participant} />
-              <div className="absolute bottom-3 left-3 bg-gray-900 bg-opacity-70 rounded-md px-2 py-1">
-                <span className="text-sm font-medium">
-                  {participant.isCreator ? "Host" : "Participant"}
-                </span>
-              </div>
-            </div>
-          ))}
+          {/* Empty placeholder for better grid layout when few participants */}
+          {participants.length === 0 && !isCreator && (
+            <div className="hidden md:block md:col-span-2 md:row-span-2"></div>
+          )}
         </div>
       </main>
 
