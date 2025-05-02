@@ -10,15 +10,20 @@ interface Participant {
 interface UseWebRTCProps {
   roomId: string;
   isCreator: boolean;
+  onDataReceived?: (data: any) => void;
 }
 
-export const useWebRTC = ({ roomId, isCreator }: UseWebRTCProps) => {
+export const useWebRTC = ({
+  roomId,
+  isCreator,
+  onDataReceived,
+}: UseWebRTCProps) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [networkTopology, setNetworkTopology] = useState<"mesh" | "star">(
-    "star"
+    "mesh"
   );
 
   const peerRef = useRef<Peer | null>(null);
@@ -409,6 +414,17 @@ export const useWebRTC = ({ roomId, isCreator }: UseWebRTCProps) => {
       if (data.type === "peer-disconnect" && data.peerId) {
         handlePeerDisconnection(data.peerId);
       }
+
+      // Forward any data to the callback if provided
+      if (
+        onDataReceived &&
+        data.type !== "peer-list" &&
+        data.type !== "new-peer" &&
+        data.type !== "request-peer-list" &&
+        data.type !== "peer-disconnect"
+      ) {
+        onDataReceived(data, dataConn.peer);
+      }
     });
 
     dataConn.on("close", () => {
@@ -602,6 +618,17 @@ export const useWebRTC = ({ roomId, isCreator }: UseWebRTCProps) => {
     }
   };
 
+  // Send data to all connected peers
+  const sendDataToAll = (data: any) => {
+    if (!peerRef.current) return;
+
+    Object.entries(connectionsRef.current).forEach(([peerId, connections]) => {
+      if (connections.dataConnection?.open) {
+        connections.dataConnection.send(data);
+      }
+    });
+  };
+
   return {
     localStream,
     participants,
@@ -612,5 +639,6 @@ export const useWebRTC = ({ roomId, isCreator }: UseWebRTCProps) => {
     setTopology,
     networkTopology,
     reconnectAll,
+    sendDataToAll,
   };
 };
