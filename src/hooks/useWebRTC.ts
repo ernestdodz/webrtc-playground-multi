@@ -64,13 +64,39 @@ export const useWebRTC = ({ roomId, isCreator }: UseWebRTCProps) => {
     // Generate a unique peer ID based on roomId and role
     const peerId = isCreator ? `${roomId}-creator` : `${roomId}-${Date.now()}`;
 
-    // Initialize PeerJS with STUN servers
+    // Initialize PeerJS with STUN/TURN servers
     const peer = new Peer(peerId, {
       config: {
         iceServers: [
+          // Google STUN servers
           { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:stun1.l.google.com:19302" },
+          { urls: "stun:stun2.l.google.com:19302" },
+          { urls: "stun:stun3.l.google.com:19302" },
+          { urls: "stun:stun4.l.google.com:19302" },
+          // Twilio STUN server
           { urls: "stun:global.stun.twilio.com:3478" },
+          // OpenRelay STUN server
+          { urls: "stun:stun.openrelay.metered.ca:80" },
+          // OpenRelay TURN servers (UDP)
+          {
+            urls: "turn:openrelay.metered.ca:80",
+            username: "openrelayproject",
+            credential: "openrelayproject",
+          },
+          {
+            urls: "turn:openrelay.metered.ca:443",
+            username: "openrelayproject",
+            credential: "openrelayproject",
+          },
+          // OpenRelay TURN servers (TCP)
+          {
+            urls: "turn:openrelay.metered.ca:443?transport=tcp",
+            username: "openrelayproject",
+            credential: "openrelayproject",
+          },
         ],
+        iceCandidatePoolSize: 10,
       },
       debug: 2,
     });
