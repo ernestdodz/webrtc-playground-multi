@@ -18,7 +18,7 @@ export const useWebRTC = ({ roomId, isCreator }: UseWebRTCProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [networkTopology, setNetworkTopology] = useState<"mesh" | "star">(
-    "mesh"
+    "star"
   );
 
   const peerRef = useRef<Peer | null>(null);
