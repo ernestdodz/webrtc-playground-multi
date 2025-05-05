@@ -9,8 +9,6 @@ import {
   Copy,
   Users,
   Send,
-  MonitorSmartphone,
-  MonitorOff,
   Share2,
   Link,
   MessageSquare,
@@ -41,7 +39,6 @@ const Room: React.FC = () => {
   const [isMicOn, setIsMicOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isCopied, setIsCopied] = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [showShareOptions, setShowShareOptions] = useState(false);
 
@@ -55,7 +52,6 @@ const Room: React.FC = () => {
     participants,
     toggleAudio,
     toggleVideo,
-    shareScreen,
     error,
     sendDataToAll,
   } = useWebRTC({
@@ -130,32 +126,6 @@ const Room: React.FC = () => {
   const handleToggleVideo = () => {
     toggleVideo();
     setIsVideoOn(!isVideoOn);
-  };
-
-  const handleToggleScreenShare = async () => {
-    try {
-      // If currently sharing screen, stop sharing
-      if (isScreenSharing) {
-        await shareScreen(false);
-        setIsScreenSharing(false);
-      } else {
-        // Start screen sharing
-        const stream = await shareScreen(true);
-        if (stream) {
-          setIsScreenSharing(true);
-
-          // Add event listener for when user stops sharing screen via browser UI
-          stream.getVideoTracks()[0].onended = () => {
-            // Call shareScreen(false) to properly revert to camera
-            shareScreen(false).then(() => {
-              setIsScreenSharing(false);
-            });
-          };
-        }
-      }
-    } catch (err) {
-      console.error("Error toggling screen share:", err);
-    }
   };
 
   const handleCopyRoomId = () => {
@@ -499,24 +469,6 @@ const Room: React.FC = () => {
               <Video className="h-6 w-6" />
             ) : (
               <VideoOff className="h-6 w-6" />
-            )}
-          </button>
-
-          <button
-            onClick={handleToggleScreenShare}
-            className={`p-3 rounded-full ${
-              isScreenSharing
-                ? "bg-red-500 hover:bg-red-600"
-                : "bg-gray-700 hover:bg-gray-600"
-            } transition-colors duration-300 shadow-lg`}
-            aria-label={
-              isScreenSharing ? "Stop sharing screen" : "Share screen"
-            }
-          >
-            {isScreenSharing ? (
-              <MonitorOff className="h-6 w-6" />
-            ) : (
-              <MonitorSmartphone className="h-6 w-6" />
             )}
           </button>
 
